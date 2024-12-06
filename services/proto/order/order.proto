@@ -1,0 +1,28 @@
+syntax = "proto3";
+package order;
+
+option go_package = "github.com/gonzabosio/transaction/services/proto/order";
+
+service OrderService {
+  rpc NewAccessToken(Client) returns (AccessToken) {};
+  rpc NewOrder(Order) returns (Result) {};
+  rpc GetOrderDetails(OrderID) returns (OrderDetails) {};
+}
+
+message Client {
+  string clientId = 1;
+  string clientSecret = 2;
+}
+
+message AccessToken { string value = 1; };
+
+message Order {
+  string currency = 1;
+  string amount = 2;
+};
+
+message Result { string message = 1; }
+
+message OrderID { string id = 1; }
+
+message OrderDetails { string status = 1; }

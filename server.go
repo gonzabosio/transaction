@@ -15,10 +15,13 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading env: %v", err)
 	}
-	gw := gateway.NewAPIGateway()
+	gw, err := gateway.NewAPIGateway()
+	if err != nil {
+		log.Fatalf("Failed to create api gateway: %v", err)
+	}
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Post("/payment", gw.PaymentGateway)
+	r.Post("/order", gw.OrderGateway)
 	srvPort := os.Getenv("SERVER_PORT")
 	log.Printf("API Gateway listening on %s\n", srvPort)
 	log.Fatal(http.ListenAndServe(srvPort, r))

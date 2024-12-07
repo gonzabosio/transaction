@@ -5,10 +5,12 @@ import (
 	"os"
 
 	"github.com/gonzabosio/transaction/services/async/client"
+	"github.com/gonzabosio/transaction/services/proto"
 )
 
 type gateway struct {
-	mq *client.RabbitClient
+	mq  *client.RabbitClient
+	svs *proto.Services
 }
 
 func NewAPIGateway() (*gateway, error) {
@@ -16,7 +18,7 @@ func NewAPIGateway() (*gateway, error) {
 		os.Getenv("RABBITMQ_USER"),
 		os.Getenv("RABBITMQ_PASSWORD"),
 		os.Getenv("RABBITMQ_HOST"),
-		"orders",
+		"customers",
 	)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create rabbitmq connection: %v", err)
@@ -25,7 +27,10 @@ func NewAPIGateway() (*gateway, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create rabbitmq client: %v", err)
 	}
+
+	svs := proto.NewServices()
 	return &gateway{
-		mq: &client,
+		mq:  &client,
+		svs: svs,
 	}, nil
 }

@@ -9,6 +9,8 @@ require (
 	google.golang.org/protobuf v1.35.2
 )
 
+require github.com/lib/pq v1.10.9 // indirect
+
 require (
 	github.com/rabbitmq/amqp091-go v1.10.0
 	golang.org/x/net v0.29.0 // indirect

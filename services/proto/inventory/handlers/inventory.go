@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"net"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 type InventoryService struct {
 	pb.UnimplementedInventoryServiceServer
+	DB *sql.DB
 }
 
 func StartInventoryServiceServer() {

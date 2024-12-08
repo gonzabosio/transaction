@@ -27,8 +27,10 @@ func NewAPIGateway() (*gateway, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create rabbitmq client: %v", err)
 	}
-
-	svs := proto.NewServices()
+	svs, err := proto.InitServices()
+	if err != nil {
+		return nil, err
+	}
 	return &gateway{
 		mq:  &client,
 		svs: svs,

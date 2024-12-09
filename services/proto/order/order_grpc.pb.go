@@ -30,7 +30,7 @@ const (
 type OrderServiceClient interface {
 	NewAccessToken(ctx context.Context, in *Client, opts ...grpc.CallOption) (*AccessToken, error)
 	NewOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Result, error)
-	GetOrderDetails(ctx context.Context, in *OrderID, opts ...grpc.CallOption) (*OrderDetails, error)
+	GetOrderDetails(ctx context.Context, in *OrderDetailsRequest, opts ...grpc.CallOption) (*OrderDetails, error)
 }
 
 type orderServiceClient struct {
@@ -61,7 +61,7 @@ func (c *orderServiceClient) NewOrder(ctx context.Context, in *Order, opts ...gr
 	return out, nil
 }
 
-func (c *orderServiceClient) GetOrderDetails(ctx context.Context, in *OrderID, opts ...grpc.CallOption) (*OrderDetails, error) {
+func (c *orderServiceClient) GetOrderDetails(ctx context.Context, in *OrderDetailsRequest, opts ...grpc.CallOption) (*OrderDetails, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(OrderDetails)
 	err := c.cc.Invoke(ctx, OrderService_GetOrderDetails_FullMethodName, in, out, cOpts...)
@@ -77,7 +77,7 @@ func (c *orderServiceClient) GetOrderDetails(ctx context.Context, in *OrderID, o
 type OrderServiceServer interface {
 	NewAccessToken(context.Context, *Client) (*AccessToken, error)
 	NewOrder(context.Context, *Order) (*Result, error)
-	GetOrderDetails(context.Context, *OrderID) (*OrderDetails, error)
+	GetOrderDetails(context.Context, *OrderDetailsRequest) (*OrderDetails, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
 
@@ -94,7 +94,7 @@ func (UnimplementedOrderServiceServer) NewAccessToken(context.Context, *Client) 
 func (UnimplementedOrderServiceServer) NewOrder(context.Context, *Order) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewOrder not implemented")
 }
-func (UnimplementedOrderServiceServer) GetOrderDetails(context.Context, *OrderID) (*OrderDetails, error) {
+func (UnimplementedOrderServiceServer) GetOrderDetails(context.Context, *OrderDetailsRequest) (*OrderDetails, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrderDetails not implemented")
 }
 func (UnimplementedOrderServiceServer) mustEmbedUnimplementedOrderServiceServer() {}
@@ -155,7 +155,7 @@ func _OrderService_NewOrder_Handler(srv interface{}, ctx context.Context, dec fu
 }
 
 func _OrderService_GetOrderDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrderID)
+	in := new(OrderDetailsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func _OrderService_GetOrderDetails_Handler(srv interface{}, ctx context.Context,
 		FullMethod: OrderService_GetOrderDetails_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).GetOrderDetails(ctx, req.(*OrderID))
+		return srv.(OrderServiceServer).GetOrderDetails(ctx, req.(*OrderDetailsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

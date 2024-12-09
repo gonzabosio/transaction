@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gonzabosio/transaction/gateway/utils"
 	"github.com/gonzabosio/transaction/model"
 	"github.com/gonzabosio/transaction/services/proto/inventory"
+	"github.com/gonzabosio/transaction/services/proto/order"
 )
 
 func (gw *gateway) OrderGateway(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +34,8 @@ func (gw *gateway) OrderGateway(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	res, err := gw.svs.Inventory.GetStock(ctx, &inventory.ProductRequest{Name: reqBody.Name})
+	// inventory service
+	res, err := gw.svs.Inventory.GetStock(ctx, &inventory.ProductRequest{ProductId: reqBody.ProductId})
 	if err != nil {
 		if err == context.DeadlineExceeded {
 			utils.WriteJSON(w, map[string]string{
@@ -56,15 +59,42 @@ func (gw *gateway) OrderGateway(w http.ResponseWriter, r *http.Request) {
 	}
 	if !res.IsAvailable {
 		utils.WriteJSON(w, map[string]string{
-			"message": "Product is not available",
+			"message":    "Client cannot make an order of the product",
+			"error_info": "Product is not available",
 		}, http.StatusUnprocessableEntity)
 		return
 	}
 
-	// 2. create order
+	// order service
+	accessToken, err := gw.svs.Order.NewAccessToken(ctx, &order.Client{ClientAuth: gw.clientAuth})
+	if err != nil {
+		utils.WriteJSON(w, map[string]string{
+			"message":    "Failed to generate access token",
+			"error_info": err.Error(),
+		}, http.StatusBadRequest)
+		return
+	}
+	price := strconv.FormatFloat(float64(res.Price), 'f', -1, 32)
+	newOrder, err := gw.svs.Order.NewOrder(ctx, &order.Order{AccessToken: accessToken.Value, Currency: "USD", Amount: price})
+	if err != nil {
+		utils.WriteJSON(w, map[string]string{
+			"message":    "Failed to create new order",
+			"error_info": err.Error(),
+		}, http.StatusInternalServerError)
+		return
+	}
+	orderDetails, err := gw.svs.Order.GetOrderDetails(ctx, &order.OrderDetailsRequest{Id: newOrder.OrderId, AccessToken: accessToken.Value})
+	if err != nil {
+		utils.WriteJSON(w, map[string]string{
+			"message":    "Failed to get order details",
+			"error_info": err.Error(),
+		}, http.StatusInternalServerError)
+		return
+	}
 
 	utils.WriteJSON(w, map[string]interface{}{
-		"message": fmt.Sprintf("Order for %s was created", reqBody.Name),
-		"stock":   res.Stock,
+		"message":       fmt.Sprintf("Order for %s was created", res.Name),
+		"stock":         res.Stock,
+		"order_details": orderDetails,
 	}, http.StatusCreated)
 }

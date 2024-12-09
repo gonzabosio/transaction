@@ -6,23 +6,37 @@ option go_package = "github.com/gonzabosio/transaction/services/proto/order";
 service OrderService {
   rpc NewAccessToken(Client) returns (AccessToken) {};
   rpc NewOrder(Order) returns (Result) {};
-  rpc GetOrderDetails(OrderID) returns (OrderDetails) {};
+  rpc GetOrderDetails(OrderDetailsRequest) returns (OrderDetails) {};
 }
 
-message Client {
-  string clientId = 1;
-  string clientSecret = 2;
-}
+message Client { string clientAuth = 1; }
 
 message AccessToken { string value = 1; };
 
 message Order {
-  string currency = 1;
-  string amount = 2;
+  string accessToken = 1;
+  string currency = 2;
+  string amount = 3;
 };
 
-message Result { string message = 1; }
+message Result {
+  string message = 1;
+  string orderId = 2;
+}
 
-message OrderID { string id = 1; }
+message OrderDetailsRequest {
+  string id = 1;
+  string accessToken = 2;
+}
 
-message OrderDetails { string status = 1; }
+message PurchaseUnits {
+  string amount = 1;
+  string currency = 2;
+  string payeeEmail = 3;
+  string merchantId = 4;
+}
+
+message OrderDetails {
+  string status = 1;
+  PurchaseUnits purchase = 2;
+}

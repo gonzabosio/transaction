@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -9,8 +10,9 @@ import (
 )
 
 type gateway struct {
-	mq  *client.RabbitClient
-	svs *proto.Services
+	mq         *client.RabbitClient
+	svs        *proto.Services
+	clientAuth string
 }
 
 func NewAPIGateway() (*gateway, error) {
@@ -31,8 +33,11 @@ func NewAPIGateway() (*gateway, error) {
 	if err != nil {
 		return nil, err
 	}
+	clientAuth := base64.StdEncoding.EncodeToString([]byte(os.Getenv("CLIENT_ID") + ":" + os.Getenv("CLIENT_SECRET")))
+
 	return &gateway{
-		mq:  &client,
-		svs: svs,
+		mq:         &client,
+		svs:        svs,
+		clientAuth: clientAuth,
 	}, nil
 }

@@ -1,11 +1,12 @@
 package model
 
 type Product struct {
-	Id    int
+	Id    int64
 	Name  string
 	Stock int64
+	Price float32
 }
 
 type ProductRequest struct {
-	Name string `json:"name" validate:"required"`
+	ProductId int64 `json:"product_id" validate:"required"`
 }

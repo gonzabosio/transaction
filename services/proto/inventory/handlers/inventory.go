@@ -7,7 +7,9 @@ import (
 	"net"
 	"os"
 
+	"github.com/gonzabosio/transaction/model"
 	pb "github.com/gonzabosio/transaction/services/proto/inventory"
+	invdb "github.com/gonzabosio/transaction/services/proto/inventory/db"
 	"google.golang.org/grpc"
 )
 
@@ -21,8 +23,17 @@ func StartInventoryServiceServer() {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
+	db, err := invdb.NewInventoryDbConn()
+	if err != nil {
+		log.Fatalf("Connection to database failed: %v", err)
+	}
+	if err := db.Ping(); err != nil {
+		log.Fatalf("Failed to ping database: %v", err)
+	}
+	db.SetMaxOpenConns(50)
+	defer db.Close()
 	grpcServer := grpc.NewServer()
-	pb.RegisterInventoryServiceServer(grpcServer, &InventoryService{})
+	pb.RegisterInventoryServiceServer(grpcServer, &InventoryService{DB: db})
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
@@ -33,6 +44,14 @@ func (i *InventoryService) GetProducts(pr *pb.ProductsRequest, srv pb.InventoryS
 	return nil
 }
 
-func (i *InventoryService) GetStock(ctx context.Context, in *pb.ProductRequest) (*pb.Available, error) {
-	return nil, nil
+func (i *InventoryService) GetStock(ctx context.Context, payload *pb.ProductRequest) (*pb.Available, error) {
+	row := i.DB.QueryRow(`SELECT * FROM product WHERE name=$1`, payload.Name)
+	product := &model.Product{}
+	if err := row.Scan(&product.Id, &product.Name, &product.Stock); err != nil {
+		return nil, err
+	}
+	result := &pb.Available{}
+	result.IsAvailable = product.Stock > 0
+	result.Stock = product.Stock
+	return result, nil
 }

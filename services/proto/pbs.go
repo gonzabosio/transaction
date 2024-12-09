@@ -2,24 +2,31 @@ package proto
 
 import (
 	"fmt"
+	"os"
 
-	invdb "github.com/gonzabosio/transaction/services/proto/inventory/db"
-	inv "github.com/gonzabosio/transaction/services/proto/inventory/handlers"
-	order "github.com/gonzabosio/transaction/services/proto/order/handlers"
+	inv "github.com/gonzabosio/transaction/services/proto/inventory"
+	order "github.com/gonzabosio/transaction/services/proto/order"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Services struct {
-	Inventory *inv.InventoryService
-	Order     *order.OrderService
+	Inventory inv.InventoryServiceClient
+	Order     order.OrderServiceClient
 }
 
 func InitServices() (*Services, error) {
-	db, err := invdb.NewInventoryDbConn()
+	inventoryConn, err := grpc.NewClient(os.Getenv("INVENTORY_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, fmt.Errorf("Database error: %v", err)
+		return nil, fmt.Errorf("Failed to connect to Inventory service: %v", err)
+	}
+
+	orderConn, err := grpc.NewClient(os.Getenv("ORDER_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to connect to Order service: %v", err)
 	}
 	return &Services{
-		Inventory: &inv.InventoryService{DB: db},
-		Order:     &order.OrderService{},
+		Inventory: inv.NewInventoryServiceClient(inventoryConn),
+		Order:     order.NewOrderServiceClient(orderConn),
 	}, nil
 }

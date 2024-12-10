@@ -1,0 +1,20 @@
+syntax = "proto3";
+package payment;
+
+option go_package = "github.com/gonzabosio/transaction/services/proto/payment";
+
+service PaymentService {
+  rpc CheckoutOrder(CheckoutRequest) returns (Result) {};
+}
+
+message CheckoutRequest {
+  string accessToken = 1;
+  string orderId = 2;
+}
+
+message Result {
+  string orderStatus = 1;
+  string newAmount = 2;
+  string paypalFee = 3;
+  string paymentMethod = 4;
+}

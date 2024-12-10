@@ -12,6 +12,7 @@ import (
 	"github.com/gonzabosio/transaction/gateway"
 	inventory "github.com/gonzabosio/transaction/services/proto/inventory/handlers"
 	order "github.com/gonzabosio/transaction/services/proto/order/handlers"
+	payment "github.com/gonzabosio/transaction/services/proto/payment/handlers"
 	"github.com/joho/godotenv"
 )
 
@@ -35,6 +36,7 @@ func main() {
 
 	go inventory.StartInventoryServiceServer()
 	go order.StartOrderServiceServer()
+	go payment.StartPaymentServiceServer()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)

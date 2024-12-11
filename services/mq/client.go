@@ -1,9 +1,10 @@
-package client
+package mq
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -13,8 +14,13 @@ type RabbitClient struct {
 	ch   *amqp.Channel
 }
 
-func ConnectRabbitMQ(username, password, host, vhost string) (*amqp.Connection, error) {
-	return amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s/%s", username, password, host, vhost))
+func ConnectRabbitMQ(vhost string) (*amqp.Connection, error) {
+	return amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s/%s",
+		os.Getenv("RABBITMQ_USER"),
+		os.Getenv("RABBITMQ_PASSWORD"),
+		os.Getenv("RABBITMQ_HOST"),
+		vhost),
+	)
 }
 
 func NewRabbitMQClient(conn *amqp.Connection) (RabbitClient, error) {

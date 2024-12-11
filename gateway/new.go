@@ -5,27 +5,22 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gonzabosio/transaction/services/async/client"
+	"github.com/gonzabosio/transaction/services/mq"
 	"github.com/gonzabosio/transaction/services/proto"
 )
 
-type gateway struct {
-	mq         *client.RabbitClient
+type Gateway struct {
+	mq         *mq.RabbitClient
 	svs        *proto.Services
 	clientAuth string
 }
 
-func NewAPIGateway() (*gateway, error) {
-	conn, err := client.ConnectRabbitMQ(
-		os.Getenv("RABBITMQ_USER"),
-		os.Getenv("RABBITMQ_PASSWORD"),
-		os.Getenv("RABBITMQ_HOST"),
-		"customers",
-	)
+func NewAPIGateway() (*Gateway, error) {
+	publisherConn, err := mq.ConnectRabbitMQ("customers")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create rabbitmq connection: %v", err)
 	}
-	client, err := client.NewRabbitMQClient(conn)
+	publisherClient, err := mq.NewRabbitMQClient(publisherConn)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create rabbitmq client: %v", err)
 	}
@@ -35,9 +30,16 @@ func NewAPIGateway() (*gateway, error) {
 	}
 	clientAuth := base64.StdEncoding.EncodeToString([]byte(os.Getenv("CLIENT_ID") + ":" + os.Getenv("CLIENT_SECRET")))
 
-	return &gateway{
-		mq:         &client,
+	return &Gateway{
+		mq:         &publisherClient,
 		svs:        svs,
 		clientAuth: clientAuth,
 	}, nil
+}
+
+func (gw *Gateway) CloseRabbitPublisherChannel() error {
+	if err := gw.mq.Close(); err != nil {
+		return err
+	}
+	return nil
 }

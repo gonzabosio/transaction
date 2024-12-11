@@ -14,7 +14,7 @@ import (
 	"github.com/gonzabosio/transaction/services/proto/order"
 )
 
-func (gw *gateway) OrderGateway(w http.ResponseWriter, r *http.Request) {
+func (gw *Gateway) OrderGateway(w http.ResponseWriter, r *http.Request) {
 	reqBody := new(model.ProductRequest)
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		utils.WriteJSON(w, map[string]string{

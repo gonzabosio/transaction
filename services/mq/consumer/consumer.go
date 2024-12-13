@@ -15,6 +15,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type paymentClient struct {
@@ -29,6 +30,7 @@ type chanResult struct {
 type paymentRequest struct {
 	OrderId     string `json:"order_id"`
 	AccessToken string `json:"access_token"`
+	ProductId   int64  `json:"product_id"`
 }
 
 func NewPaymentServiceClient() (*paymentClient, error) {
@@ -102,6 +104,7 @@ func main() {
 	go func() {
 		for msg := range messageBus {
 			r := &chanResult{}
+			var productId int64
 			// spawn a worker
 			g.Go(func() error {
 				log.Printf("New message: %v\nSend to: %v", string(msg.Body), msg.ReplyTo)
@@ -110,6 +113,7 @@ func main() {
 					log.Printf("Unmarshal payment payload failed: %v\n", err)
 					return err
 				}
+				productId = payload.ProductId
 				checkoutCh := make(chan *chanResult)
 				go func() {
 					ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -152,13 +156,18 @@ func main() {
 					log.Printf("Failed to send callback message to producer: %v\n", err)
 				}
 			} else {
+				r.result.ProductId = productId
+				b, err := protojson.Marshal(r.result)
+				if err != nil {
+					log.Printf("Failed to marshal result")
+				}
 				if err := responseClient.Send(ctx, "payment_callbacks", msg.ReplyTo, amqp091.Publishing{
 					ContentType:  "application/json",
 					DeliveryMode: amqp091.Persistent,
 					Body: []byte(fmt.Sprintf(`{
 							"message": "Payment completed",
-							"payment_details": "%v"
-							}`, r.result)),
+							"payment_details": %s
+							}`, string(b))),
 					CorrelationId: msg.CorrelationId,
 				}); err != nil {
 					log.Printf("Failed to send callback message to producer: %v\n", err)

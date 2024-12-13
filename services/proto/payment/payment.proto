@@ -14,8 +14,10 @@ message CheckoutRequest {
 
 message Result {
   string orderId = 1;
-  string orderStatus = 2;
-  string netAmount = 3;
-  string paypalFee = 4;
-  string refundUrl = 5;
+  int64 productId = 2;
+  string orderStatus = 3;
+  string netAmount = 4;
+  string paypalFee = 5;
+  string payerEmail = 6;
+  string refundUrl = 7;
 }

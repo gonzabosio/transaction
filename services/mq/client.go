@@ -79,13 +79,11 @@ func (rc RabbitClient) ApplyQos(count, size int, global bool) error {
 
 const Q1 = "payment_queue1"
 
-func (rc RabbitClient) RunPaymentCheckoutTasks(orderId, accessToken string) error {
+func (rc RabbitClient) RunPaymentCheckoutTasks(orderId, accessToken string, productId int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	id := uuid.New()
-	// fmt.Printf("Payment ID: %s", id.String())
-
 	if err := rc.Send(ctx, "payment_events", "", amqp091.Publishing{
 		ContentType:   "application/json",
 		DeliveryMode:  amqp091.Persistent,
@@ -93,8 +91,9 @@ func (rc RabbitClient) RunPaymentCheckoutTasks(orderId, accessToken string) erro
 		CorrelationId: fmt.Sprintf("payment_%s", id.String()),
 		Body: []byte(fmt.Sprintf(`{
 			"order_id": "%s",
-			"access_token": "%s"
-		}`, orderId, accessToken)),
+			"access_token": "%s",
+			"product_id": %d
+		}`, orderId, accessToken, productId)),
 	}); err != nil {
 		return err
 	}

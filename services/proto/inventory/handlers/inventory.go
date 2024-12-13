@@ -50,15 +50,7 @@ func (i *InventoryService) GetStock(ctx context.Context, payload *pb.ProductRequ
 	if err := row.Scan(&product.Id, &product.Name, &product.Stock, &product.Price); err != nil {
 		return nil, err
 	}
-	result := &pb.Available{Stock: product.Stock, Price: product.Price, Name: product.Name}
+	result := &pb.Available{ProductId: product.Id, Stock: product.Stock, Price: product.Price, Name: product.Name}
 	result.IsAvailable = product.Stock > 0
-	if result.IsAvailable {
-		_, err := i.DB.Exec("UPDATE product SET stock = stock - 1 WHERE id=$1", product.Id)
-		if err != nil {
-			return nil, err
-		} else {
-			result.Stock -= 1
-		}
-	}
 	return result, nil
 }

@@ -8,7 +8,8 @@ import (
 )
 
 type PaymentRequest struct {
-	OrderId string `json:"order_id" validate:"required"`
+	OrderId   string `json:"order_id" validate:"required"`
+	ProductId int64  `json:"product_id" validate:"required"`
 }
 
 func (gw *Gateway) PaymentGateway(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +38,7 @@ func (gw *Gateway) PaymentGateway(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := gw.mq.RunPaymentCheckoutTasks(payload.OrderId, accessToken); err != nil {
+	if err := gw.mq.RunPaymentCheckoutTasks(payload.OrderId, accessToken, payload.ProductId); err != nil {
 		utils.WriteJSON(w, map[string]string{
 			"message":    "Payment could not be processed",
 			"error_info": err.Error(),

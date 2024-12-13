@@ -11,10 +11,11 @@ service InventoryService {
 message ProductRequest { int64 productId = 1; }
 
 message Available {
-  bool isAvailable = 1;
-  int64 stock = 2;
-  float price = 3;
-  string name = 4;
+  int64 productId = 1;
+  bool isAvailable = 2;
+  int64 stock = 3;
+  float price = 4;
+  string name = 5;
 }
 
 message ProductsRequest {};

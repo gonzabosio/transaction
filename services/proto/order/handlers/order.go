@@ -52,7 +52,6 @@ func (o *OrderService) NewAccessToken(ctx context.Context, paypalClient *pb.Clie
 	if err := json.Unmarshal(body, &responseBody); err != nil {
 		return nil, err
 	}
-	fmt.Println("ACCESS_TOKEN:", responseBody["access_token"].(string))
 	return &pb.AccessToken{Value: responseBody["access_token"].(string)}, nil
 }
 

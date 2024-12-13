@@ -57,7 +57,7 @@ func CaptureOrder(orderID, accessToken string) (*pb.Result, error) {
 	defer resp.Body.Close()
 	var responseBody map[string]interface{}
 	body, _ := io.ReadAll(resp.Body)
-	// fmt.Println("JSON:", string(body))
+	fmt.Println("JSON:", string(body))
 	json.Unmarshal(body, &responseBody)
 
 	if resp.StatusCode != http.StatusCreated {
@@ -70,6 +70,6 @@ func CaptureOrder(orderID, accessToken string) (*pb.Result, error) {
 	netAmount := sellerInfo["net_amount"].(map[string]interface{})["value"].(string)
 	paypalFee := sellerInfo["paypal_fee"].(map[string]interface{})["value"].(string)
 	refundUrl := capture["links"].([]interface{})[1].(map[string]interface{})["href"].(string)
-
-	return &pb.Result{OrderId: orderID, OrderStatus: responseBody["status"].(string), NetAmount: netAmount, PaypalFee: paypalFee, RefundUrl: refundUrl}, nil
+	// fetch payer email
+	return &pb.Result{OrderId: orderID, OrderStatus: responseBody["status"].(string), NetAmount: netAmount, PaypalFee: paypalFee, PayerEmail: "", RefundUrl: refundUrl}, nil
 }

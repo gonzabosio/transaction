@@ -38,5 +38,7 @@ message PurchaseUnits {
 
 message OrderDetails {
   string status = 1;
-  PurchaseUnits purchase = 2;
+  string orderId = 2;
+  string paymentUrl = 3;
+  PurchaseUnits purchase = 4;
 }

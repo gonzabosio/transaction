@@ -52,6 +52,7 @@ func (o *OrderService) NewAccessToken(ctx context.Context, paypalClient *pb.Clie
 	if err := json.Unmarshal(body, &responseBody); err != nil {
 		return nil, err
 	}
+	fmt.Println("ACCESS_TOKEN:", responseBody["access_token"].(string))
 	return &pb.AccessToken{Value: responseBody["access_token"].(string)}, nil
 }
 
@@ -116,8 +117,9 @@ func (o *OrderService) GetOrderDetails(ctx context.Context, order *pb.OrderDetai
 	var responseBody map[string]interface{}
 	json.NewDecoder(res.Body).Decode(&responseBody)
 
-	purchaseMap := responseBody["purchase_units"].([]interface{})
-	purchaseData := purchaseMap[0].(map[string]interface{})
+	checkoutLink := responseBody["links"].([]interface{})[1].(map[string]interface{})["href"].(string)
+
+	purchaseData := responseBody["purchase_units"].([]interface{})[0].(map[string]interface{})
 	amountData := purchaseData["amount"].(map[string]interface{})
 	purchase := &pb.PurchaseUnits{}
 	purchase.Amount = amountData["value"].(string)
@@ -126,5 +128,10 @@ func (o *OrderService) GetOrderDetails(ctx context.Context, order *pb.OrderDetai
 	purchase.PayeeEmail = payeeData["email_address"].(string)
 	purchase.MerchantId = payeeData["merchant_id"].(string)
 
-	return &pb.OrderDetails{Status: responseBody["status"].(string), Purchase: purchase}, nil
+	return &pb.OrderDetails{
+		Status:     responseBody["status"].(string),
+		OrderId:    order.Id,
+		PaymentUrl: checkoutLink,
+		Purchase:   purchase,
+	}, nil
 }

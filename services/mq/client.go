@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/rabbitmq/amqp091-go"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -72,4 +75,28 @@ func (rc RabbitClient) Consume(queue, consumer string, autoAck bool) (<-chan amq
 
 func (rc RabbitClient) ApplyQos(count, size int, global bool) error {
 	return rc.ch.Qos(count, size, global)
+}
+
+const Q1 = "payment_queue1"
+
+func (rc RabbitClient) RunPaymentCheckoutTasks(orderId, accessToken string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	id := uuid.New()
+	// fmt.Printf("Payment ID: %s", id.String())
+
+	if err := rc.Send(ctx, "payment_events", "", amqp091.Publishing{
+		ContentType:   "application/json",
+		DeliveryMode:  amqp091.Persistent,
+		ReplyTo:       Q1,
+		CorrelationId: fmt.Sprintf("payment_%s", id.String()),
+		Body: []byte(fmt.Sprintf(`{
+			"order_id": "%s",
+			"access_token": "%s"
+		}`, orderId, accessToken)),
+	}); err != nil {
+		return err
+	}
+	return nil
 }

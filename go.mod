@@ -5,9 +5,12 @@ go 1.23.3
 require (
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/joho/godotenv v1.5.1
+	golang.org/x/sync v0.8.0
 	google.golang.org/grpc v1.68.1
 	google.golang.org/protobuf v1.35.2
 )
+
+require github.com/google/uuid v1.6.0
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect

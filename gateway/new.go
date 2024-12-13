@@ -16,7 +16,7 @@ type Gateway struct {
 }
 
 func NewAPIGateway() (*Gateway, error) {
-	publisherConn, err := mq.ConnectRabbitMQ("customers")
+	publisherConn, err := mq.ConnectRabbitMQ("payments")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create rabbitmq connection: %v", err)
 	}
@@ -24,7 +24,7 @@ func NewAPIGateway() (*Gateway, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create rabbitmq client: %v", err)
 	}
-	svs, err := proto.InitServices()
+	svs, err := proto.InitForegroundServices()
 	if err != nil {
 		return nil, err
 	}

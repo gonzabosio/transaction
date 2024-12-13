@@ -91,7 +91,6 @@ func (gw *Gateway) OrderGateway(w http.ResponseWriter, r *http.Request) {
 		}, http.StatusInternalServerError)
 		return
 	}
-
 	utils.WriteJSON(w, map[string]interface{}{
 		"message":       fmt.Sprintf("Order for %s was created", res.Name),
 		"stock":         res.Stock,

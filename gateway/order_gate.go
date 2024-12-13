@@ -91,6 +91,15 @@ func (gw *Gateway) OrderGateway(w http.ResponseWriter, r *http.Request) {
 		}, http.StatusInternalServerError)
 		return
 	}
+
+	if err := gw.cache.SaveAccessToken(newOrder.OrderId, accessToken.Value); err != nil {
+		utils.WriteJSON(w, map[string]string{
+			"message":    "Failed to save access token in cache memory",
+			"error_info": err.Error(),
+		}, http.StatusBadRequest)
+		return
+	}
+
 	utils.WriteJSON(w, map[string]interface{}{
 		"message":       fmt.Sprintf("Order for %s was created", res.Name),
 		"stock":         res.Stock,

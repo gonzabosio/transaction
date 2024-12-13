@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gonzabosio/transaction/cache"
 	"github.com/gonzabosio/transaction/services/mq"
 	"github.com/gonzabosio/transaction/services/proto"
 )
@@ -12,6 +13,7 @@ import (
 type Gateway struct {
 	mq         *mq.RabbitClient
 	svs        *proto.Services
+	cache      *cache.CacheClient
 	clientAuth string
 }
 
@@ -30,9 +32,12 @@ func NewAPIGateway() (*Gateway, error) {
 	}
 	clientAuth := base64.StdEncoding.EncodeToString([]byte(os.Getenv("CLIENT_ID") + ":" + os.Getenv("CLIENT_SECRET")))
 
+	mc := cache.NewMemCachedStorage()
+
 	return &Gateway{
 		mq:         &publisherClient,
 		svs:        svs,
+		cache:      mc,
 		clientAuth: clientAuth,
 	}, nil
 }

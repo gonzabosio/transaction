@@ -3,7 +3,6 @@ package gateway
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/gonzabosio/transaction/gateway/utils"
 )
@@ -28,8 +27,16 @@ func (gw *Gateway) PaymentGateway(w http.ResponseWriter, r *http.Request) {
 		}, http.StatusBadRequest)
 		return
 	}
-	h := r.Header.Get("Authorization")
-	accessToken := strings.TrimPrefix(h, "Bearer ")
+
+	accessToken, err := gw.cache.GetAccessToken(payload.OrderId)
+	if err != nil {
+		utils.WriteJSON(w, map[string]string{
+			"message":    "Failed to get access token from cache",
+			"error_info": err.Error(),
+		}, http.StatusBadRequest)
+		return
+	}
+
 	if err := gw.mq.RunPaymentCheckoutTasks(payload.OrderId, accessToken); err != nil {
 		utils.WriteJSON(w, map[string]string{
 			"message":    "Payment could not be processed",
@@ -37,7 +44,7 @@ func (gw *Gateway) PaymentGateway(w http.ResponseWriter, r *http.Request) {
 		}, http.StatusInternalServerError)
 		return
 	}
-	utils.WriteJSON(w, map[string]interface{}{
+	utils.WriteJSON(w, map[string]string{
 		"message": "Payment is being processed ⏳",
 	}, http.StatusAccepted)
 }

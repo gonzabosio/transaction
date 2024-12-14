@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/gonzabosio/transaction/gateway"
+	email "github.com/gonzabosio/transaction/services/proto/email/handlers"
 	inventory "github.com/gonzabosio/transaction/services/proto/inventory/handlers"
 	order "github.com/gonzabosio/transaction/services/proto/order/handlers"
 	payment "github.com/gonzabosio/transaction/services/proto/payment/handlers"
@@ -33,6 +34,7 @@ func main() {
 	go inventory.StartInventoryServiceServer()
 	go order.StartOrderServiceServer()
 	go payment.StartPaymentServiceServer()
+	go email.StartEmailServiceServer()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)

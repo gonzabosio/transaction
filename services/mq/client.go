@@ -65,7 +65,7 @@ func (rc RabbitClient) Send(ctx context.Context, exchange, routingKey string, op
 	if err != nil {
 		return err
 	}
-	log.Println(confirmation.Wait())
+	log.Println("rabbit server received publishing:", confirmation.Wait())
 	return nil
 }
 

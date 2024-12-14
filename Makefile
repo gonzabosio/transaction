@@ -13,4 +13,9 @@ build_payment_proto:
 	--go-grpc_out=paths=source_relative:. \
 	services/proto/payment/payment.proto
 
+build_email_proto:
+	protoc --go_out=paths=source_relative:. \
+	--go-grpc_out=paths=source_relative:. \
+	services/proto/email/email.proto
+
 run_protos: build_inventory_proto build_order_proto build_payment_proto

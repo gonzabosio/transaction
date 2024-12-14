@@ -62,7 +62,7 @@ func main() {
 		log.Fatalf("Failed to create rabbitmq client (consumer): %v", err)
 	}
 	defer consumerClient.Close()
-	fmt.Println("Running consumer client...", consumerClient)
+	fmt.Println("Running consumer client")
 
 	responseConn, err := mq.ConnectRabbitMQ("payments")
 	if err != nil {
@@ -74,7 +74,7 @@ func main() {
 		log.Fatalf("Failed to create rabbitmq client (response): %v", err)
 	}
 	defer responseClient.Close()
-	fmt.Println("Running response client...", responseClient)
+	fmt.Println("Running response client")
 
 	queue, err := consumerClient.CreateQueue(mq.Q1, true, true)
 	if err != nil {
@@ -107,7 +107,7 @@ func main() {
 			var productId int64
 			// spawn a worker
 			g.Go(func() error {
-				log.Printf("New message: %v\nSend to: %v", string(msg.Body), msg.ReplyTo)
+				log.Printf("New message: %v\n", string(msg.Body))
 				payload := &paymentRequest{}
 				if err := json.Unmarshal(msg.Body, &payload); err != nil {
 					log.Printf("Unmarshal payment payload failed: %v\n", err)

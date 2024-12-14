@@ -1,3 +1,0 @@
-package async
-
-// func NewRabbitClient()

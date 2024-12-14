@@ -1,11 +1,21 @@
-proto_folder:
-	mkdir -p ./services/proto/transaction_proto
+build_inventory_proto:
+	protoc --go_out=paths=source_relative:. \
+    --go-grpc_out=paths=source_relative:. \
+    services/proto/inventory/inventory.proto
 
-build_proto:
-	protoc --go_out=./services/proto/transaction_proto --go_opt=paths=source_relative \
-    --go-grpc_out=./services/proto/transaction_proto --go-grpc_opt=paths=source_relative \
-    services/proto/transaction.proto
+build_order_proto:
+	protoc --go_out=paths=source_relative:. \
+    --go-grpc_out=paths=source_relative:. \
+    services/proto/order/order.proto
 
-run_proto:
-	proto_folder
-	build_proto
+build_payment_proto:
+	protoc --go_out=paths=source_relative:. \
+	--go-grpc_out=paths=source_relative:. \
+	services/proto/payment/payment.proto
+
+build_email_proto:
+	protoc --go_out=paths=source_relative:. \
+	--go-grpc_out=paths=source_relative:. \
+	services/proto/email/email.proto
+
+run_protos: build_inventory_proto build_order_proto build_payment_proto

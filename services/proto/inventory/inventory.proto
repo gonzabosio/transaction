@@ -1,0 +1,29 @@
+syntax = "proto3";
+package inventory;
+
+option go_package = "github.com/gonzabosio/transaction/services/proto/inventory";
+
+service InventoryService {
+  rpc GetProducts(ProductsRequest) returns (stream Products) {};
+  rpc GetStock(ProductRequest) returns (Available) {};
+}
+
+message ProductRequest { int64 productId = 1; }
+
+message Available {
+  int64 productId = 1;
+  bool isAvailable = 2;
+  int64 stock = 3;
+  float price = 4;
+  string name = 5;
+}
+
+message ProductsRequest {};
+
+message Products { repeated Product products = 1; }
+
+message Product {
+  int64 id = 1;
+  string name = 2;
+  int64 stock = 3;
+}

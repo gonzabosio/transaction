@@ -40,7 +40,25 @@ func StartInventoryServiceServer() {
 	}
 }
 
-func (i *InventoryService) GetProducts(pr *pb.ProductsRequest, srv pb.InventoryService_GetProductsServer) error {
+func (i *InventoryService) GetProducts(req *pb.ProductsRequest, srv pb.InventoryService_GetProductsServer) error {
+	rows, err := i.DB.Query(`SELECT * FROM product`)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		var product pb.Product
+		if err := rows.Scan(&product.Id, &product.Name, &product.Stock, &product.Price); err != nil {
+			return err
+		}
+		if err := srv.Send(&pb.Product{
+			Id:    product.Id,
+			Name:  product.Name,
+			Stock: product.Stock,
+			Price: product.Price,
+		}); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

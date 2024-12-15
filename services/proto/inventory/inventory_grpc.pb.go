@@ -27,7 +27,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InventoryServiceClient interface {
-	GetProducts(ctx context.Context, in *ProductsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Products], error)
+	GetProducts(ctx context.Context, in *ProductsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Product], error)
 	GetStock(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*Available, error)
 }
 
@@ -39,13 +39,13 @@ func NewInventoryServiceClient(cc grpc.ClientConnInterface) InventoryServiceClie
 	return &inventoryServiceClient{cc}
 }
 
-func (c *inventoryServiceClient) GetProducts(ctx context.Context, in *ProductsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Products], error) {
+func (c *inventoryServiceClient) GetProducts(ctx context.Context, in *ProductsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Product], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &InventoryService_ServiceDesc.Streams[0], InventoryService_GetProducts_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ProductsRequest, Products]{ClientStream: stream}
+	x := &grpc.GenericClientStream[ProductsRequest, Product]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (c *inventoryServiceClient) GetProducts(ctx context.Context, in *ProductsRe
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type InventoryService_GetProductsClient = grpc.ServerStreamingClient[Products]
+type InventoryService_GetProductsClient = grpc.ServerStreamingClient[Product]
 
 func (c *inventoryServiceClient) GetStock(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*Available, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -72,7 +72,7 @@ func (c *inventoryServiceClient) GetStock(ctx context.Context, in *ProductReques
 // All implementations must embed UnimplementedInventoryServiceServer
 // for forward compatibility.
 type InventoryServiceServer interface {
-	GetProducts(*ProductsRequest, grpc.ServerStreamingServer[Products]) error
+	GetProducts(*ProductsRequest, grpc.ServerStreamingServer[Product]) error
 	GetStock(context.Context, *ProductRequest) (*Available, error)
 	mustEmbedUnimplementedInventoryServiceServer()
 }
@@ -84,7 +84,7 @@ type InventoryServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedInventoryServiceServer struct{}
 
-func (UnimplementedInventoryServiceServer) GetProducts(*ProductsRequest, grpc.ServerStreamingServer[Products]) error {
+func (UnimplementedInventoryServiceServer) GetProducts(*ProductsRequest, grpc.ServerStreamingServer[Product]) error {
 	return status.Errorf(codes.Unimplemented, "method GetProducts not implemented")
 }
 func (UnimplementedInventoryServiceServer) GetStock(context.Context, *ProductRequest) (*Available, error) {
@@ -116,11 +116,11 @@ func _InventoryService_GetProducts_Handler(srv interface{}, stream grpc.ServerSt
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(InventoryServiceServer).GetProducts(m, &grpc.GenericServerStream[ProductsRequest, Products]{ServerStream: stream})
+	return srv.(InventoryServiceServer).GetProducts(m, &grpc.GenericServerStream[ProductsRequest, Product]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type InventoryService_GetProductsServer = grpc.ServerStreamingServer[Products]
+type InventoryService_GetProductsServer = grpc.ServerStreamingServer[Product]
 
 func _InventoryService_GetStock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProductRequest)

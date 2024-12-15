@@ -1,4 +1,4 @@
-package main
+package router
 
 import (
 	"github.com/go-chi/chi/v5"

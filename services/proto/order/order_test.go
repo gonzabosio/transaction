@@ -26,7 +26,6 @@ func TestOrderServiceFullProcess(t *testing.T) {
 	if at.Value == "" {
 		t.Fatal("failed to create access token")
 	}
-	t.Logf("new testing access token created: %s", at.Value)
 
 	res, err := s.NewOrder(context.Background(), &pb.Order{AccessToken: at.Value, Currency: "USD", Amount: "30"})
 	if err != nil {
@@ -38,5 +37,6 @@ func TestOrderServiceFullProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	assert.Equal(t, "CREATED", det.Status)
 }

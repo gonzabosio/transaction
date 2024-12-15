@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/gonzabosio/transaction/gateway"
+	"github.com/gonzabosio/transaction/router"
 	email "github.com/gonzabosio/transaction/services/proto/email/handlers"
 	inventory "github.com/gonzabosio/transaction/services/proto/inventory/handlers"
 	order "github.com/gonzabosio/transaction/services/proto/order/handlers"
@@ -24,7 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create api gateway: %v", err)
 	}
-	r := NewRouter(gw)
+	r := router.NewRouter(gw)
 	srvPort := os.Getenv("SERVER_PORT")
 	go func() {
 		log.Printf("API Gateway listening on %s\n", srvPort)

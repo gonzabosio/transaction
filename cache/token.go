@@ -20,7 +20,7 @@ type CacheClient struct {
 
 func NewMemCachedStorage() *CacheClient {
 	order_encryption_key = os.Getenv("ORDER_ENCRYPTION_KEY")
-	return &CacheClient{mod: memcache.New(os.Getenv("MEMCACHE_SERVER"))}
+	return &CacheClient{mod: memcache.New(os.Getenv("MEMCACHED_SERVER"))}
 }
 
 func (cc *CacheClient) SaveAccessToken(orderId, accessToken string) (string, error) {

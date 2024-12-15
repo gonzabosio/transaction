@@ -99,8 +99,9 @@ func main() {
 					ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 					defer cancel()
 					res, err := e.client.SendEmail(ctx, &email.EmailRequest{
-						Subject:  "PayPal Purchase",
-						BodyText: fmt.Sprintf("Hello! We inform you that your purchase of -%s- was successful 😃.\nIf you want to make a refund go to the link below:\nhttps:///myexample.business.com/refund?order_id=%s", prodName, orderId),
+						Subject:    "PayPal Purchase",
+						BodyText:   fmt.Sprintf("Hello! We inform you that your purchase of -%s- was successful 😃.\nIf you want to make a refund go to the link below:\nhttps://myexample.business.com/refund?order_id=%s", prodName, orderId),
+						PayerEmail: os.Getenv("PAYER_TEST_EMAIL"),
 					})
 					if err != nil {
 						log.Printf("Email was not sent: %v", err)

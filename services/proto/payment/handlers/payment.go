@@ -16,6 +16,7 @@ import (
 
 type PaymentService struct {
 	pb.UnimplementedPaymentServiceServer
+	ApiBaseUrl string
 }
 
 func StartPaymentServiceServer() {
@@ -24,7 +25,7 @@ func StartPaymentServiceServer() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterPaymentServiceServer(grpcServer, &PaymentService{})
+	pb.RegisterPaymentServiceServer(grpcServer, &PaymentService{ApiBaseUrl: "https://api.sandbox.paypal.com/v2"})
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
@@ -32,15 +33,15 @@ func StartPaymentServiceServer() {
 }
 
 func (p *PaymentService) CheckoutOrder(ctx context.Context, req *pb.CheckoutRequest) (*pb.Result, error) {
-	res, err := CaptureOrder(req.OrderId, req.AccessToken)
+	res, err := CaptureOrder(p.ApiBaseUrl, req.OrderId, req.AccessToken)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func CaptureOrder(orderID, accessToken string) (*pb.Result, error) {
-	url := fmt.Sprintf("https://api.sandbox.paypal.com/v2/checkout/orders/%s/capture", orderID)
+func CaptureOrder(baseUrl, orderID, accessToken string) (*pb.Result, error) {
+	url := fmt.Sprintf("%s/checkout/orders/%s/capture", baseUrl, orderID)
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return nil, err

@@ -34,7 +34,7 @@ func (e *EmailService) SendEmail(ctx context.Context, req *pb.EmailRequest) (*pb
 	bsnEmail := os.Getenv("BUSINESS_EMAIL")
 	em := email.Email{
 		From:    fmt.Sprintf("Fictitious Bussiness <%v>", bsnEmail),
-		To:      []string{os.Getenv("PAYER_TEST_EMAIL")},
+		To:      []string{req.PayerEmail},
 		Subject: req.Subject,
 		Text:    []byte(req.BodyText),
 	}

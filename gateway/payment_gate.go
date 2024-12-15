@@ -29,7 +29,7 @@ func (gw *Gateway) PaymentGateway(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := gw.cache.GetAccessToken(payload.OrderId)
+	orderId, accessToken, err := gw.cache.GetAccessToken(payload.OrderId)
 	if err != nil {
 		utils.WriteJSON(w, map[string]string{
 			"message":    "Failed to get access token from cache",
@@ -38,7 +38,7 @@ func (gw *Gateway) PaymentGateway(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := gw.mq.RunPaymentCheckoutTasks(payload.OrderId, accessToken, payload.ProductId); err != nil {
+	if err := gw.mq.RunPaymentCheckoutTasks(orderId, accessToken, payload.ProductId); err != nil {
 		utils.WriteJSON(w, map[string]string{
 			"message":    "Payment could not be processed",
 			"error_info": err.Error(),

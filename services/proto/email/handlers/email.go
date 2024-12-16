@@ -3,31 +3,15 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"log"
-	"net"
 	"net/smtp"
 	"os"
 
 	pb "github.com/gonzabosio/transaction/services/proto/email"
 	"github.com/jordan-wright/email"
-	"google.golang.org/grpc"
 )
 
 type EmailService struct {
 	pb.UnimplementedEmailServiceServer
-}
-
-func StartEmailServiceServer() {
-	lis, err := net.Listen("tcp", os.Getenv("EMAIL_PORT"))
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-	grpcServer := grpc.NewServer()
-	pb.RegisterEmailServiceServer(grpcServer, &EmailService{})
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
 }
 
 func (e *EmailService) SendEmail(ctx context.Context, req *pb.EmailRequest) (*pb.Result, error) {

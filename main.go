@@ -9,16 +9,12 @@ import (
 
 	"github.com/gonzabosio/transaction/gateway"
 	"github.com/gonzabosio/transaction/router"
-	email "github.com/gonzabosio/transaction/services/proto/email/handlers"
-	inventory "github.com/gonzabosio/transaction/services/proto/inventory/handlers"
-	order "github.com/gonzabosio/transaction/services/proto/order/handlers"
-	payment "github.com/gonzabosio/transaction/services/proto/payment/handlers"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading env: %v", err)
+		log.Printf("Error loading env: %v\n", err)
 	}
 
 	gw, err := gateway.NewAPIGateway()
@@ -29,13 +25,8 @@ func main() {
 	srvPort := os.Getenv("SERVER_PORT")
 	go func() {
 		log.Printf("API Gateway listening on %s\n", srvPort)
-		log.Fatal(http.ListenAndServe(srvPort, r))
+		log.Fatal(http.ListenAndServe(":"+srvPort, r))
 	}()
-
-	go inventory.StartInventoryServiceServer()
-	go order.StartOrderServiceServer()
-	go payment.StartPaymentServiceServer()
-	go email.StartEmailServiceServer()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)

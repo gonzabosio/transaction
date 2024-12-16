@@ -34,7 +34,7 @@ type paymentRequest struct {
 }
 
 func NewPaymentServiceClient() (*paymentClient, error) {
-	paymentConn, err := grpc.NewClient(os.Getenv("PAYMENT_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	paymentConn, err := grpc.NewClient(os.Getenv("PAYMENT_HOST")+":"+os.Getenv("PAYMENT_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to Order service: %v", err)
 	}
@@ -43,7 +43,7 @@ func NewPaymentServiceClient() (*paymentClient, error) {
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading env: %v", err)
+		log.Printf("Error loading env: %v\n", err)
 	}
 
 	p, err := NewPaymentServiceClient()

@@ -5,31 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
-	"net"
 	"net/http"
-	"os"
 
 	pb "github.com/gonzabosio/transaction/services/proto/payment"
-	"google.golang.org/grpc"
 )
 
 type PaymentService struct {
 	pb.UnimplementedPaymentServiceServer
 	ApiBaseUrl string
-}
-
-func StartPaymentServiceServer() {
-	lis, err := net.Listen("tcp", os.Getenv("PAYMENT_PORT"))
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-	grpcServer := grpc.NewServer()
-	pb.RegisterPaymentServiceServer(grpcServer, &PaymentService{ApiBaseUrl: "https://api.sandbox.paypal.com/v2"})
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
 }
 
 func (p *PaymentService) CheckoutOrder(ctx context.Context, req *pb.CheckoutRequest) (*pb.Result, error) {

@@ -6,30 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
-	"net"
 	"net/http"
-	"os"
 
 	pb "github.com/gonzabosio/transaction/services/proto/order"
-	"google.golang.org/grpc"
 )
 
 type OrderService struct {
 	pb.UnimplementedOrderServiceServer
-}
-
-func StartOrderServiceServer() {
-	lis, err := net.Listen("tcp", os.Getenv("ORDER_PORT"))
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-	grpcServer := grpc.NewServer()
-	pb.RegisterOrderServiceServer(grpcServer, &OrderService{})
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
 }
 
 func (o *OrderService) NewAccessToken(ctx context.Context, paypalClient *pb.Client) (*pb.AccessToken, error) {

@@ -22,7 +22,7 @@ type emailClient struct {
 }
 
 func NewEmailServiceClient() (*emailClient, error) {
-	emailConn, err := grpc.NewClient(os.Getenv("EMAIL_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	emailConn, err := grpc.NewClient(os.Getenv("EMAIL_HOST")+":"+os.Getenv("EMAIL_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to Order service: %v", err)
 	}
@@ -31,7 +31,7 @@ func NewEmailServiceClient() (*emailClient, error) {
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading env: %v", err)
+		log.Printf("Error loading env: %v\n", err)
 	}
 
 	e, err := NewEmailServiceClient()

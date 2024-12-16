@@ -3,41 +3,14 @@ package handlers
 import (
 	"context"
 	"database/sql"
-	"log"
-	"net"
-	"os"
 
 	"github.com/gonzabosio/transaction/model"
 	pb "github.com/gonzabosio/transaction/services/proto/inventory"
-	invdb "github.com/gonzabosio/transaction/services/proto/inventory/db"
-	"google.golang.org/grpc"
 )
 
 type InventoryService struct {
 	pb.UnimplementedInventoryServiceServer
 	DB *sql.DB
-}
-
-func StartInventoryServiceServer() {
-	lis, err := net.Listen("tcp", os.Getenv("INVENTORY_PORT"))
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-	db, err := invdb.NewInventoryDbConn()
-	if err != nil {
-		log.Fatalf("Connection to database failed: %v", err)
-	}
-	if err := db.Ping(); err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
-	}
-	db.SetMaxOpenConns(50)
-	defer db.Close()
-	grpcServer := grpc.NewServer()
-	pb.RegisterInventoryServiceServer(grpcServer, &InventoryService{DB: db})
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
 }
 
 func (i *InventoryService) GetProducts(req *pb.ProductsRequest, srv pb.InventoryService_GetProductsServer) error {

@@ -1,0 +1,141 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    environment:
+      - SERVER_PORT=${SERVER_PORT}
+      - CLIENT_ID=${CLIENT_ID}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+      - RABBITMQ_HOST=${RABBITMQ_CONTAINER}
+      - MEMCACHED_HOST=${MEMCACHED_HOST}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - ORDER_ENCRYPTION_KEY=${ORDER_ENCRYPTION_KEY}
+      - INVENTORY_PORT=${INVENTORY_PORT}
+      - INVENTORY_HOST=${INVENTORY_HOST}
+      - ORDER_PORT=${ORDER_PORT}
+      - ORDER_HOST=${ORDER_HOST}
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    depends_on:
+      - rabbitmq
+      - memcached
+    networks:
+      - app_network
+
+  inventory_service:
+    build:
+      context: .
+      dockerfile: services/proto/inventory/Dockerfile
+    container_name: inventory_service
+    environment:
+      - INVENTORY_PORT=${INVENTORY_PORT}
+      - INVENTORY_DB_CONN=${POSTGRES_CONN}
+    ports:
+      - "${INVENTORY_PORT}:${INVENTORY_PORT}"
+    networks:
+      - app_network
+    depends_on:
+      - rabbitmq
+
+  order_service:
+    build:
+      context: .
+      dockerfile: services/proto/order/Dockerfile
+    container_name: order_service
+    environment:
+      - ORDER_PORT=${ORDER_PORT}
+    ports:
+      - "${ORDER_PORT}:${ORDER_PORT}"
+    networks:
+      - app_network
+    depends_on:
+      - rabbitmq
+
+  payment_service:
+    build:
+      context: .
+      dockerfile: services/proto/payment/Dockerfile
+    container_name: payment_service
+    environment:
+      - PAYMENT_PORT=${PAYMENT_PORT}
+    ports:
+      - "${PAYMENT_PORT}:${PAYMENT_PORT}"
+    networks:
+      - app_network
+    depends_on:
+      - rabbitmq
+
+  email_service:
+    build:
+      context: .
+      dockerfile: services/proto/email/Dockerfile
+    container_name: email_service
+    environment:
+      - EMAIL_PORT=${EMAIL_PORT}
+      - BUSINESS_EMAIL=${BUSINESS_EMAIL}
+      - BUSINESS_EMAIL_PW=${BUSINESS_EMAIL_PW}
+    ports:
+      - "${EMAIL_PORT}:${EMAIL_PORT}"
+    networks:
+      - app_network
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:4.1-rc-management
+    container_name: rabbitmq-transaction
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - app_network
+
+  producer_mq:
+    build:
+      context: .
+      dockerfile: services/mq/producer/Dockerfile
+    container_name: producer_mq
+    environment:
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - PAYER_TEST_EMAIL=${PAYER_TEST_EMAIL}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_HOST=${RABBITMQ_CONTAINER}
+      - INVENTORY_DB_CONN=${POSTGRES_CONN}
+    depends_on:
+      - rabbitmq
+    networks:
+      - app_network
+
+  consumer_mq:
+    build:
+      context: .
+      dockerfile: services/mq/consumer/Dockerfile
+    container_name: consumer_mq
+    environment:
+      - PAYMENT_PORT=${PAYMENT_PORT}
+      - PAYMENT_HOST=${PAYMENT_HOST}
+      - PAYER_TEST_EMAIL=${PAYER_TEST_EMAIL}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_HOST=${RABBITMQ_CONTAINER}
+    depends_on:
+      - rabbitmq
+    networks:
+      - app_network
+
+  memcached:
+    image: memcached:alpine
+    container_name: memcached-transaction
+    ports:
+      - "11211:11211"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

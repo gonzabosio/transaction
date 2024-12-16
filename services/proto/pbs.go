@@ -16,12 +16,12 @@ type Services struct {
 }
 
 func InitForegroundServices() (*Services, error) {
-	inventoryConn, err := grpc.NewClient(os.Getenv("INVENTORY_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	inventoryConn, err := grpc.NewClient(os.Getenv("INVENTORY_HOST")+":"+os.Getenv("INVENTORY_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to Inventory service: %v", err)
 	}
 
-	orderConn, err := grpc.NewClient(os.Getenv("ORDER_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	orderConn, err := grpc.NewClient(os.Getenv("ORDER_HOST")+":"+os.Getenv("ORDER_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to Order service: %v", err)
 	}

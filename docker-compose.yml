@@ -136,6 +136,28 @@ services:
     networks:
       - app_network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus_transaction
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - app_network
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana_transaction
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PW}
+    networks:
+      - app_network
+    depends_on:
+      - prometheus
+
 networks:
   app_network:
     driver: bridge

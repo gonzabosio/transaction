@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/gonzabosio/transaction/gateway"
+	middleprom "github.com/gonzabosio/transaction/prometheus/middleware"
 	"github.com/gonzabosio/transaction/router"
 	"github.com/joho/godotenv"
 )
@@ -17,11 +18,14 @@ func main() {
 		log.Printf("Error loading env: %v\n", err)
 	}
 
+	m := middleprom.MetricsSetup()
+	m.PrometheusInit()
+
 	gw, err := gateway.NewAPIGateway()
 	if err != nil {
 		log.Fatalf("Failed to create api gateway: %v", err)
 	}
-	r := router.NewRouter(gw)
+	r := router.NewRouter(gw, m)
 	srvPort := os.Getenv("SERVER_PORT")
 	go func() {
 		log.Printf("API Gateway listening on %s\n", srvPort)

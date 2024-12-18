@@ -63,7 +63,7 @@ func (cwr *ResponseWriterTracker) WriteHeader(code int) {
 func (m *Metrics) TrackMetrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		crw := &ResponseWriterTracker{w, http.StatusMethodNotAllowed}
+		crw := &ResponseWriterTracker{w, http.StatusOK}
 
 		next.ServeHTTP(crw, r)
 		// total requests - errors

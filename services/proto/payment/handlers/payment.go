@@ -5,42 +5,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
-	"net"
 	"net/http"
-	"os"
 
 	pb "github.com/gonzabosio/transaction/services/proto/payment"
-	"google.golang.org/grpc"
 )
 
 type PaymentService struct {
 	pb.UnimplementedPaymentServiceServer
-}
-
-func StartPaymentServiceServer() {
-	lis, err := net.Listen("tcp", os.Getenv("PAYMENT_PORT"))
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-	grpcServer := grpc.NewServer()
-	pb.RegisterPaymentServiceServer(grpcServer, &PaymentService{})
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
+	ApiBaseUrl string
 }
 
 func (p *PaymentService) CheckoutOrder(ctx context.Context, req *pb.CheckoutRequest) (*pb.Result, error) {
-	res, err := CaptureOrder(req.OrderId, req.AccessToken)
+	res, err := CaptureOrder(p.ApiBaseUrl, req.OrderId, req.AccessToken)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func CaptureOrder(orderID, accessToken string) (*pb.Result, error) {
-	url := fmt.Sprintf("https://api.sandbox.paypal.com/v2/checkout/orders/%s/capture", orderID)
+func CaptureOrder(baseUrl, orderID, accessToken string) (*pb.Result, error) {
+	url := fmt.Sprintf("%s/checkout/orders/%s/capture", baseUrl, orderID)
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return nil, err

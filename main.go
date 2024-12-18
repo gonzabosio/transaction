@@ -8,33 +8,29 @@ import (
 	"syscall"
 
 	"github.com/gonzabosio/transaction/gateway"
-	email "github.com/gonzabosio/transaction/services/proto/email/handlers"
-	inventory "github.com/gonzabosio/transaction/services/proto/inventory/handlers"
-	order "github.com/gonzabosio/transaction/services/proto/order/handlers"
-	payment "github.com/gonzabosio/transaction/services/proto/payment/handlers"
+	middleprom "github.com/gonzabosio/transaction/prometheus/middleware"
+	"github.com/gonzabosio/transaction/router"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading env: %v", err)
+		log.Printf("Error loading env: %v\n", err)
 	}
+
+	m := middleprom.MetricsSetup()
+	m.PrometheusInit()
 
 	gw, err := gateway.NewAPIGateway()
 	if err != nil {
 		log.Fatalf("Failed to create api gateway: %v", err)
 	}
-	r := NewRouter(gw)
+	r := router.NewRouter(gw, m)
 	srvPort := os.Getenv("SERVER_PORT")
 	go func() {
 		log.Printf("API Gateway listening on %s\n", srvPort)
-		log.Fatal(http.ListenAndServe(srvPort, r))
+		log.Fatal(http.ListenAndServe(":"+srvPort, r))
 	}()
-
-	go inventory.StartInventoryServiceServer()
-	go order.StartOrderServiceServer()
-	go payment.StartPaymentServiceServer()
-	go email.StartEmailServiceServer()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)

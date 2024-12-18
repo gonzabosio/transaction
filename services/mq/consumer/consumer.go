@@ -34,7 +34,7 @@ type paymentRequest struct {
 }
 
 func NewPaymentServiceClient() (*paymentClient, error) {
-	paymentConn, err := grpc.NewClient(os.Getenv("PAYMENT_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	paymentConn, err := grpc.NewClient(os.Getenv("PAYMENT_HOST")+":"+os.Getenv("PAYMENT_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to Order service: %v", err)
 	}
@@ -43,7 +43,7 @@ func NewPaymentServiceClient() (*paymentClient, error) {
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading env: %v", err)
+		log.Printf("Error loading env: %v\n", err)
 	}
 
 	p, err := NewPaymentServiceClient()
@@ -51,25 +51,19 @@ func main() {
 		log.Fatalf("Failed to create new payment service client: %v", err)
 	}
 
-	// start background consumer clients
-	consumerConn, err := mq.ConnectRabbitMQ("payments")
+	paymentsConn, err := mq.ConnectRabbitMQ("payments")
 	if err != nil {
 		log.Fatalf("Failed to create rabbitmq connection (consumer): %v", err)
 	}
-	defer consumerConn.Close()
-	consumerClient, err := mq.NewRabbitMQClient(consumerConn)
+	defer paymentsConn.Close()
+	// start background consumer clients
+	consumerClient, err := mq.NewRabbitMQClient(paymentsConn)
 	if err != nil {
 		log.Fatalf("Failed to create rabbitmq client (consumer): %v", err)
 	}
 	defer consumerClient.Close()
 	fmt.Println("Running consumer client")
-
-	responseConn, err := mq.ConnectRabbitMQ("payments")
-	if err != nil {
-		log.Fatalf("Failed to create rabbitmq connection (response): %v", err)
-	}
-	defer responseConn.Close()
-	responseClient, err := mq.NewRabbitMQClient(responseConn)
+	responseClient, err := mq.NewRabbitMQClient(paymentsConn)
 	if err != nil {
 		log.Fatalf("Failed to create rabbitmq client (response): %v", err)
 	}
@@ -105,9 +99,10 @@ func main() {
 		for msg := range messageBus {
 			r := &chanResult{}
 			var productId int64
-			// spawn a worker
+			retryCount := 2
 			g.Go(func() error {
-				log.Printf("New message: %v\n", string(msg.Body))
+				correlationId := msg.CorrelationId
+				log.Printf("New message(%s): %v\n", correlationId, string(msg.Body))
 				payload := &paymentRequest{}
 				if err := json.Unmarshal(msg.Body, &payload); err != nil {
 					log.Printf("Unmarshal payment payload failed: %v\n", err)
@@ -115,17 +110,28 @@ func main() {
 				}
 				productId = payload.ProductId
 				checkoutCh := make(chan *chanResult)
-				go func() {
-					ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-					defer cancel()
-					res, err := p.client.CheckoutOrder(ctx, &payment.CheckoutRequest{OrderId: payload.OrderId, AccessToken: payload.AccessToken})
-					if err != nil {
-						checkoutCh <- &chanResult{result: nil, err: err}
-					} else {
-						checkoutCh <- &chanResult{result: res, err: nil}
+				for attempt := 1; attempt <= retryCount; attempt++ {
+					go func() {
+						ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+						defer cancel()
+						res, err := p.client.CheckoutOrder(ctx, &payment.CheckoutRequest{OrderId: payload.OrderId, AccessToken: payload.AccessToken})
+						if err != nil {
+							checkoutCh <- &chanResult{result: nil, err: err}
+						} else {
+							checkoutCh <- &chanResult{result: res, err: nil}
+						}
+					}()
+					r = <-checkoutCh
+					if r.err == nil {
+						break
 					}
-				}()
-				r = <-checkoutCh
+					if attempt < retryCount {
+						log.Printf("retrying checkout order; message correlation id: %s\n", correlationId)
+						time.Sleep(2 * time.Second)
+					} else {
+						break
+					}
+				}
 				if err := msg.Ack(false); err != nil {
 					return err
 				}
@@ -178,6 +184,4 @@ func main() {
 
 	blocking := make(chan bool)
 	<-blocking
-	consumerClient.Close()
-	responseClient.Close()
 }

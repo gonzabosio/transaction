@@ -22,7 +22,7 @@ type emailClient struct {
 }
 
 func NewEmailServiceClient() (*emailClient, error) {
-	emailConn, err := grpc.NewClient(os.Getenv("EMAIL_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	emailConn, err := grpc.NewClient(os.Getenv("EMAIL_HOST")+":"+os.Getenv("EMAIL_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to Order service: %v", err)
 	}
@@ -31,7 +31,7 @@ func NewEmailServiceClient() (*emailClient, error) {
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading env: %v", err)
+		log.Printf("Error loading env: %v\n", err)
 	}
 
 	e, err := NewEmailServiceClient()
@@ -76,6 +76,7 @@ func main() {
 			json.Unmarshal(message.Body, &callbackBody)
 			if v, ok := callbackBody["error_info"]; ok {
 				log.Printf("%s: %s\n", callbackBody["message"].(string), v)
+				// notification system alert the frontend
 			} else {
 				fmt.Printf("%s\n", callbackBody["message"])
 				pId := callbackBody["payment_details"].(map[string]interface{})["productId"].(string)
@@ -99,8 +100,9 @@ func main() {
 					ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 					defer cancel()
 					res, err := e.client.SendEmail(ctx, &email.EmailRequest{
-						Subject:  "PayPal Purchase",
-						BodyText: fmt.Sprintf("Hello! We inform you that your purchase of -%s- was successful 😃.\nIf you want to make a refund go to the link below:\nhttps:///myexample.business.com/refund?order_id=%s", prodName, orderId),
+						Subject:    "PayPal Purchase",
+						BodyText:   fmt.Sprintf("Hello! We inform you that your purchase of -%s- was successful 😃.\nIf you want to make a refund go to the link below:\nhttps://myexample.business.com/refund?order_id=%s", prodName, orderId),
+						PayerEmail: os.Getenv("PAYER_TEST_EMAIL"),
 					})
 					if err != nil {
 						log.Printf("Email was not sent: %v", err)

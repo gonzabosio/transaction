@@ -51,25 +51,19 @@ func main() {
 		log.Fatalf("Failed to create new payment service client: %v", err)
 	}
 
-	// start background consumer clients
-	consumerConn, err := mq.ConnectRabbitMQ("payments")
+	paymentsConn, err := mq.ConnectRabbitMQ("payments")
 	if err != nil {
 		log.Fatalf("Failed to create rabbitmq connection (consumer): %v", err)
 	}
-	defer consumerConn.Close()
-	consumerClient, err := mq.NewRabbitMQClient(consumerConn)
+	defer paymentsConn.Close()
+	// start background consumer clients
+	consumerClient, err := mq.NewRabbitMQClient(paymentsConn)
 	if err != nil {
 		log.Fatalf("Failed to create rabbitmq client (consumer): %v", err)
 	}
 	defer consumerClient.Close()
 	fmt.Println("Running consumer client")
-
-	responseConn, err := mq.ConnectRabbitMQ("payments")
-	if err != nil {
-		log.Fatalf("Failed to create rabbitmq connection (response): %v", err)
-	}
-	defer responseConn.Close()
-	responseClient, err := mq.NewRabbitMQClient(responseConn)
+	responseClient, err := mq.NewRabbitMQClient(paymentsConn)
 	if err != nil {
 		log.Fatalf("Failed to create rabbitmq client (response): %v", err)
 	}
@@ -190,6 +184,4 @@ func main() {
 
 	blocking := make(chan bool)
 	<-blocking
-	consumerClient.Close()
-	responseClient.Close()
 }

@@ -76,6 +76,7 @@ func main() {
 			json.Unmarshal(message.Body, &callbackBody)
 			if v, ok := callbackBody["error_info"]; ok {
 				log.Printf("%s: %s\n", callbackBody["message"].(string), v)
+				// notification system alert the frontend
 			} else {
 				fmt.Printf("%s\n", callbackBody["message"])
 				pId := callbackBody["payment_details"].(map[string]interface{})["productId"].(string)

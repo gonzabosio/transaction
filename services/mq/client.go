@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
-	"github.com/google/uuid"
-	"github.com/rabbitmq/amqp091-go"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -16,6 +13,8 @@ type RabbitClient struct {
 	conn *amqp.Connection
 	ch   *amqp.Channel
 }
+
+const Q1 = "payment_queue1"
 
 func ConnectRabbitMQ(vhost string) (*amqp.Connection, error) {
 	return amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s/%s",
@@ -75,27 +74,4 @@ func (rc RabbitClient) Consume(queue, consumer string, autoAck bool) (<-chan amq
 
 func (rc RabbitClient) ApplyQos(count, size int, global bool) error {
 	return rc.ch.Qos(count, size, global)
-}
-
-const Q1 = "payment_queue1"
-
-func (rc RabbitClient) RunPaymentCheckoutTasks(orderId, accessToken string, productId int64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
-	id := uuid.New()
-	if err := rc.Send(ctx, "payment_events", "", amqp091.Publishing{
-		ContentType:   "application/json",
-		DeliveryMode:  amqp091.Persistent,
-		ReplyTo:       Q1,
-		CorrelationId: fmt.Sprintf("payment_%s", id.String()),
-		Body: []byte(fmt.Sprintf(`{
-			"order_id": "%s",
-			"access_token": "%s",
-			"product_id": %d
-		}`, orderId, accessToken, productId)),
-	}); err != nil {
-		return err
-	}
-	return nil
 }
